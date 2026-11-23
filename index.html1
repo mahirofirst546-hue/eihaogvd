@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>PocketCard</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #111827;
+    --sub: #6b7280;
+    --border: #e5e7eb;
+    --primary: #2563eb;
+    --red: #dc2626;
+    --amber: #d97706;
+    --green: #16a34a;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 20;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  header h1 { font-size: 16px; font-weight: 800; }
+  .badge {
+    font-size: 11px;
+    background: #eff6ff;
+    color: var(--primary);
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-weight: 700;
+  }
+  .top-add-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .top-add-btn:active { opacity: 0.8; }
+
+  main {
+    position: fixed;
+    top: 52px;
+    bottom: 68px;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    padding: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .view { display: none; min-height: 100%; }
+  .view.active { display: flex; flex-direction: column; }
+
+  select, input, textarea {
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 10px;
+    background: var(--card);
+    color: var(--text);
+    width: 100%;
+  }
+
+  /* Filter Pill & Panel */
+  .filter-toggle {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .filter-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .filter-panel label {
+    display: block;
+    font-size: 11px;
+    color: var(--sub);
+    margin-bottom: 3px;
+  }
+
+  /* Flashcard */
+  .flashcard {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    overflow-y: auto;
+    min-height: 150px;
+  }
+  .card-meta {
+    font-size: 12px;
+    color: var(--sub);
+    margin-bottom: 12px;
+  }
+  .star-color {
+    color: #eab308;
+    font-weight: 700;
+  }
+  .card-q {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .card-a {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    font-size: 18px;
+    color: var(--primary);
+    font-weight: 700;
+    line-height: 1.5;
+    width: 100%;
+    word-break: break-word;
+  }
+  .hidden { display: none !important; }
+
+  .controls {
+    margin-top: 12px;
+    flex-shrink: 0;
+  }
+  .btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--primary);
+    color: #fff;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-sub { background: #e5e7eb; color: var(--text); }
+  .rate-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .rate-grid .btn {
+    padding: 16px 4px;
+    font-size: 15px;
+  }
+  .btn-again { background: #fee2e2; color: var(--red); }
+  .btn-hard { background: #fef3c7; color: var(--amber); }
+  .btn-good { background: #dcfce7; color: var(--green); }
+
+  /* Add / List View */
+  .box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .hint {
+    font-size: 11px;
+    color: var(--sub);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+  .msg-ok {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #dcfce7;
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .item {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 11px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .item:first-child { border-top-left-radius: 10px; border-top-right-radius: 10px; }
+  .item:last-child { border-bottom: none; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; }
+  .item-text { flex: 1; min-width: 0; }
+  .item-q { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-a { font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .del-btn {
+    background: #fee2e2;
+    color: var(--red);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* 画面下に固定した大型ナビゲーション */
+  nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 68px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    z-index: 20;
+  }
+  nav button {
+    background: none;
+    border: none;
+    padding: 8px 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sub);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  nav button span.icon { font-size: 18px; line-height: 1; }
+  nav button.active {
+    color: var(--primary);
+    background: #eff6ff;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>PocketCard</h1>
+    <span class="badge" id="stat-badge">習得 0/0</span>
+  </div>
+  <button class="top-add-btn" onclick="openAddTab()">＋ 問題追加</button>
+</header>
+
+<main>
+  <!-- 1. 学習ビュー -->
+  <section id="view-study" class="view active">
+    <div class="filter-toggle" onclick="toggleFilterPanel()">
+      <span id="filter-summary">すべて出題 · シャッフル</span>
+      <span style="color:var(--primary);" id="filter-toggle-text">絞り込み ▼</span>
+    </div>
+
+    <div class="filter-panel hidden" id="filter-panel">
+      <div>
+        <label>習得状況</label>
+        <select id="f-status" onchange="resetSession()">
+          <option value="all">すべて</option>
+          <option value="not_mastered">習得済み以外</option>
+          <option value="unlearned">未学習のみ</option>
+          <option value="again">もう一度のみ</option>
+          <option value="hard">不安のみ</option>
+          <option value="mastered">習得済みのみ</option>
+        </select>
+      </div>
+      <div>
+        <label>重要度（★の数）</label>
+        <select id="f-star" onchange="resetSession()">
+          <option value="all">すべて</option>
+          <option value="3">★★★ のみ</option>
+          <option value="2plus">★★ 以上</option>
+          <option value="1plus">★ 以上</option>
+          <option value="2">★★ のみ</option>
+          <option value="1">★ のみ</option>
+          <option value="0">星なし（0）のみ</option>
+        </select>
+      </div>
+      <div>
+        <label>時代・タグ</label>
+        <select id="f-tag" onchange="resetSession()">
+          <option value="all">すべて</option>
+        </select>
+      </div>
+      <div>
+        <label>プリント番号</label>
+        <select id="f-print" onchange="resetSession()">
+          <option value="all">すべて</option>
+        </select>
+      </div>
+      <div>
+        <label>出題数</label>
+        <select id="f-limit" onchange="resetSession()">
+          <option value="0">全問出題</option>
+          <option value="10">10問まで</option>
+          <option value="20">20問まで</option>
+          <option value="30">30問まで</option>
+        </select>
+      </div>
+      <div>
+        <label>出題順</label>
+        <select id="f-order" onchange="resetSession()">
+          <option value="shuffle">シャッフル</option>
+          <option value="star_desc">重要度が高い順</option>
+          <option value="seq">登録順</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flashcard" onclick="revealAnswer()">
+      <div class="card-meta" id="card-meta">タップして開始</div>
+      <div class="card-q" id="card-q">右上の「＋ 問題追加」から登録してください</div>
+      <div class="card-a hidden" id="card-a"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="btn-show" onclick="revealAnswer()">答えを見る</button>
+      <div class="rate-grid hidden" id="rate-btns">
+        <button class="btn btn-again" onclick="rateCard('again')">❌ もう一度</button>
+        <button class="btn btn-hard" onclick="rateCard('hard')">🔺 不安</button>
+        <button class="btn btn-good" onclick="rateCard('mastered')">⭕️ 習得</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 登録・一覧ビュー -->
+  <section id="view-add" class="view">
+    <div class="box">
+      <button class="btn" style="margin-bottom:10px;" onclick="addCards()">＋ テキストから一括登録する</button>
+      <textarea id="bulk-input" rows="5" placeholder="ここに問題と答えを貼り付け（例：問題 / 答え / 江戸時代 / プリント3 / ★★★）"></textarea>
+      <div class="hint">
